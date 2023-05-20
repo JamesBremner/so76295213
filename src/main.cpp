@@ -1,34 +1,229 @@
-#include <string>
-#include <fstream>
-#include <sstream>
 #include <iostream>
-#include <vector>
-#include <algorithm>
-#include <wex.h>
-#include "cStarterGUI.h"
 
-class cGUI : public cStarterGUI
+using namespace std;
+
+const int n = 10;
+
+struct link
 {
-public:
-    cGUI()
-        : cStarterGUI(
-              "Starter",
-              {50, 50, 1000, 500}),
-          lb(wex::maker::make < wex::label >(fm))
+    char key;
+    link *next;
+} *G[n];
+
+void init(link *gr[n])
+{
+    for (int i = 0; i < n; i++)
+        gr[i] = NULL;
+}
+
+int search_node(link *gr[n], char c)
+{
+    int flag = 0;
+    for (int i = 0; i < n; i++)
+        if (gr[i])
+            if (gr[i]->key == c)
+                flag = 1;
+    return flag;
+}
+
+int search_arc(link *gr[5], char c1, char c2)
+{
+    int flag = 0;
+    if (search_node(gr, c1) && search_node(gr, c2))
     {
-        lb.move(50, 50, 100, 30);
-        lb.text("Hello World");
-
-        show();
-        run();
+        int i = 0;
+        link *p;
+        do
+        {
+            if ((gr[i] == NULL) || (gr[i] && gr[i]->key != c1))
+                i++;
+        } while (gr[i]->key != c1);
+        p = gr[i];
+        while (p->key != c2 && p->next != NULL)
+            p = p->next;
+        if (p->key == c2)
+            flag = 1;
     }
+    return flag;
+}
 
-private:
-    wex::label &lb;
-};
-
-main()
+void add_node(link *gr[n], char c)
 {
-    cGUI theGUI;
+    if (search_node(gr, c))
+    {
+        cout << "\nVyrhyt veche syshtestvuva\n";
+    }
+    else
+    {
+        int j = 0;
+        while (gr[j] && (j < n))
+            j++;
+        if (gr[j] == NULL)
+        {
+            gr[j] = new link;
+            gr[j]->key = c;
+            gr[j]->next = NULL;
+        }
+        else
+        {
+            cout << "\nPrepylvane na strukturata\n";
+        }
+    }
+}
+
+void add_arc(link *gr[n], char c1, char c2)
+{
+    if (search_node(gr, c1) && search_node(gr, c2))
+    {
+        int i = 0;
+        link *p;
+        while (gr[i]->key != c1)
+            i++;
+        p = new link;
+        p->key = c2;
+        p->next = gr[i]->next;
+        gr[i]->next = p;
+    }
+    else
+    {
+        cout << "\nVryhove ne sushtestvuva";
+    }
+}
+
+void del_node(link *gr[n], char c)
+{
+    // loop over nodes in graph
+    for (int i = 0; i < n; i++)
+    {
+        auto *p = gr[i];
+        if (!p) {
+            // undefined node
+            continue;
+        }
+
+        if (p->key == c)
+        {
+            // remove node from graph
+            gr[i] = 0;
+            continue;
+        }
+
+        if (!p->next)
+        {
+            // no adjacent nodes
+            continue;
+        }
+
+        // search adjacency list for deleted node
+        while (true)
+        {
+            if (p->next->key == c) {
+                // remove node from adjacency list
+                p->next = p->next->next;
+            }
+
+            if (!p->next)
+                break;
+            p = p->next;
+        }
+    }
+}
+
+void print_menu()
+{
+    cout << "Menu:\n";
+    cout << "1. Dobavqne na vryh ( Add node )\n";
+    cout << "2. Dobavqne na dyga ( Add link )\n";
+    cout << "3. Iztrivane na vryh ( Delete mode )\n";
+    cout << "4. Vizualizirane na grafa ( Display graph )\n";
+    cout << "5. Izhod ( Exit )\n";
+    cout << "Izberete opciq: ";
+}
+
+void visualize_graph(link *gr[n])
+{
+    cout << "Graph Visualization:\n";
+    for (int i = 0; i < n; i++)
+    {
+        if (gr[i])
+        {
+            cout << gr[i]->key << " -> ";
+            link *p = gr[i]->next;
+            while (p != NULL)
+            {
+                cout << p->key << " -> ";
+                p = p->next;
+            }
+            cout << "NULL\n";
+        }
+    }
+    cout << endl;
+}
+
+void test()
+{
+    link *graph[n];
+    init(graph);
+
+    add_node(graph, 'a');
+    add_node(graph, 'b');
+    add_node(graph, 'c');
+    add_arc(graph, 'a', 'b');
+    add_arc(graph, 'a', 'c');
+    std::cout << "test ";
+    visualize_graph(graph);
+
+    del_node(graph, 'b');
+
+    std::cout << "test delete b ";
+    visualize_graph(graph);
+}
+
+int main()
+{
+    test();
+
+    link *graph[n];
+    init(graph);
+
+    char option;
+    char c, c1, c2;
+
+    do
+    {
+        print_menu();
+        cin >> option;
+
+        switch (option)
+        {
+        case '1':
+            cout << "Vyvedete vryh: ";
+            cin >> c;
+            add_node(graph, c);
+            break;
+        case '2':
+            cout << "Vyvedete pyrvi vryh na dygata: ";
+            cin >> c1;
+            cout << "Vyvedete vtori vryh na dygata: ";
+            cin >> c2;
+            add_arc(graph, c1, c2);
+            break;
+        case '3':
+            cout << "Vyvedete vryh za iztrivane: ";
+            cin >> c;
+            del_node(graph, c);
+            break;
+        case '4':
+            visualize_graph(graph);
+            break;
+        case '5':
+            cout << "Izhod ot programata.\n";
+            break;
+        default:
+            cout << "Nevalidna opciq!\n";
+            break;
+        }
+    } while (option != '5');
+
     return 0;
 }
