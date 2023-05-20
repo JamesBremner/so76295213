@@ -96,7 +96,8 @@ void del_node(link *gr[n], char c)
     for (int i = 0; i < n; i++)
     {
         auto *p = gr[i];
-        if (!p) {
+        if (!p)
+        {
             // undefined node
             continue;
         }
@@ -117,7 +118,8 @@ void del_node(link *gr[n], char c)
         // search adjacency list for deleted node
         while (true)
         {
-            if (p->next->key == c) {
+            if (p->next->key == c)
+            {
                 // remove node from adjacency list
                 p->next = p->next->next;
             }
@@ -160,6 +162,54 @@ void visualize_graph(link *gr[n])
     cout << endl;
 }
 
+/// @brief Count links to other nodes
+/// @param gr graph
+/// @param c node name
+/// @return out degree
+
+int outDegree(link *gr[n], char c)
+{
+    int count = 0;
+    for (int i = 0; i < n; i++)
+    {
+        auto *p = gr[i];
+        if (!p)
+            continue;
+        if (p->key != c)
+            continue;
+
+        while (p->next)
+        {
+            count++;
+            p = p->next;
+        }
+        break;
+    }
+    return count;
+}
+int inDegree(link *gr[n], char c)
+{
+    int count = 0;
+    for (int i = 0; i < n; i++)
+    {
+        auto *p = gr[i];
+        if (!p)
+            continue;
+        while (p->next)
+        {
+            if (p->next->key == c)
+            {
+                count++;
+            }
+
+            if (!p->next)
+                break;
+            p = p->next;
+        }
+    }
+    return count;
+}
+
 void test()
 {
     link *graph[n];
@@ -172,6 +222,13 @@ void test()
     add_arc(graph, 'a', 'c');
     std::cout << "test ";
     visualize_graph(graph);
+
+    std::cout << "a outDegree " << outDegree(graph,'a')
+        << " inDegree " << inDegree(graph,'a')  <<"\n";
+    std::cout << "b outDegree " << outDegree(graph,'b')
+        << " inDegree " << inDegree(graph,'b')<<"\n";
+    std::cout << "x outDegree " << outDegree(graph,'c')
+        << " inDegree " << inDegree(graph,'c')<<"\n";
 
     del_node(graph, 'b');
 
