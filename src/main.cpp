@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -210,6 +211,24 @@ int inDegree(link *gr[n], char c)
     return count;
 }
 
+void deleteNodes1in1out(link *gr[n])
+{
+    std::vector<char> marked;
+    for (int i = 0; i < n; i++)
+    {
+        auto *p = gr[i];
+        if (!p)
+            continue;
+        if( outDegree(gr,p->key) == 1 &&
+            inDegree(gr,p->key) == 1 )
+            marked.push_back( p->key);
+    }
+    for( char c : marked )
+    {
+        del_node(gr,c);
+    }
+}
+
 void test()
 {
     link *graph[n];
@@ -227,7 +246,7 @@ void test()
         << " inDegree " << inDegree(graph,'a')  <<"\n";
     std::cout << "b outDegree " << outDegree(graph,'b')
         << " inDegree " << inDegree(graph,'b')<<"\n";
-    std::cout << "x outDegree " << outDegree(graph,'c')
+    std::cout << "c outDegree " << outDegree(graph,'c')
         << " inDegree " << inDegree(graph,'c')<<"\n";
 
     del_node(graph, 'b');
