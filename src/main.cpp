@@ -1,166 +1,125 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 using namespace std;
 
-const int n = 10;
-
-struct link
+class cNode
 {
-    char key;
-    link *next;
-} *G[n];
+public:
+    std::string myName;
+    std::vector<cNode *> adjacent;
+    cNode(const std::string &name)
+        : myName(name)
+    {
+    }
+};
 
-void init(link *gr[n])
+class cGraph
 {
-    for (int i = 0; i < n; i++)
-        gr[i] = NULL;
+public:
+    std::vector<cNode *> myNode;
+};
+
+std::vector<cNode *>::iterator
+search_node(
+    std::vector<cNode *> &v,
+    const std::string &name)
+{
+    return std::find_if(
+        v.begin(), v.end(),
+        [&](cNode *n)
+        {
+            return n->myName == name;
+        });
 }
 
-int search_node(link *gr[n], char c)
+std::vector<cNode *>::iterator
+search_node(
+    cGraph &g,
+    const std::string &name)
 {
-    int flag = 0;
-    for (int i = 0; i < n; i++)
-        if (gr[i])
-            if (gr[i]->key == c)
-                flag = 1;
-    return flag;
+    return search_node(g.myNode, name);
 }
 
-int search_arc(link *gr[5], char c1, char c2)
+bool search_arc(
+    cGraph &g,
+    const std::string &c1,
+    const std::string &c2)
 {
-    int flag = 0;
-    if (search_node(gr, c1) && search_node(gr, c2))
-    {
-        int i = 0;
-        link *p;
-        do
-        {
-            if ((gr[i] == NULL) || (gr[i] && gr[i]->key != c1))
-                i++;
-        } while (gr[i]->key != c1);
-        p = gr[i];
-        while (p->key != c2 && p->next != NULL)
-            p = p->next;
-        if (p->key == c2)
-            flag = 1;
-    }
-    return flag;
+    auto it1 = search_node(g,c1);
+    if( it1 == g.myNode.end() )
+        return false;
+    auto it2 = search_node((*it1)->adjacent,c2);
+    if( it2 == (*it1)->adjacent.end() )
+        return false;
+    return true;
 }
 
-void add_node(link *gr[n], char c)
+void add_node(
+    cGraph &g,
+    const std::string &c)
 {
-    if (search_node(gr, c))
+    if (search_node(g, c) != g.myNode.end())
     {
-        cout << "\nVyrhyt veche syshtestvuva\n";
+        std::cout << "\nVyrhyt veche syshtestvuva\n";
+        return;
     }
-    else
-    {
-        int j = 0;
-        while (gr[j] && (j < n))
-            j++;
-        if (gr[j] == NULL)
-        {
-            gr[j] = new link;
-            gr[j]->key = c;
-            gr[j]->next = NULL;
-        }
-        else
-        {
-            cout << "\nPrepylvane na strukturata\n";
-        }
-    }
+
+    g.myNode.push_back(new cNode(c));
 }
 
-void add_arc(link *gr[n], char c1, char c2)
+void add_arc(
+    cGraph &g,
+    const std::string &c1,
+    const std::string &c2)
 {
-    if (search_node(gr, c1) && search_node(gr, c2))
-    {
-        int i = 0;
-        link *p;
-        while (gr[i]->key != c1)
-            i++;
-        p = new link;
-        p->key = c2;
-        p->next = gr[i]->next;
-        gr[i]->next = p;
-    }
-    else
-    {
-        cout << "\nVryhove ne sushtestvuva";
-    }
+    auto it1 = search_node(g, c1);
+    auto it2 = search_node(g, c2);
+    if (it1 != g.myNode.end() && it2 != g.myNode.end())
+        (*it1)->adjacent.push_back(*it2);
 }
 
-void del_node(link *gr[n], char c)
+void del_node(
+    cGraph &g,
+    const std::string &c)
 {
-    // loop over nodes in graph
-    for (int i = 0; i < n; i++)
+    for (auto &p : g.myNode)
     {
-        auto *p = gr[i];
-        if (!p)
-        {
-            // undefined node
-            continue;
-        }
-
-        if (p->key == c)
-        {
-            // remove node from graph
-            gr[i] = 0;
-            continue;
-        }
-
-        if (!p->next)
-        {
-            // no adjacent nodes
-            continue;
-        }
-
-        // search adjacency list for deleted node
-        while (true)
-        {
-            if (p->next->key == c)
-            {
-                // remove node from adjacency list
-                p->next = p->next->next;
-            }
-
-            if (!p->next)
-                break;
-            p = p->next;
-        }
+        auto it = search_node(p->adjacent, c);
+        if (it != p->adjacent.end())
+            p->adjacent.erase(it);
     }
+    auto it = search_node(g, c);
+    if (it == g.myNode.end())
+        return;
+    g.myNode.erase(it);
 }
 
 void print_menu()
 {
-    cout << "Menu:\n";
-    cout << "1. Dobavqne na vryh ( Add node )\n";
-    cout << "2. Dobavqne na dyga ( Add link )\n";
-    cout << "3. Iztrivane na vryh ( Delete mode )\n";
-    cout << "4. Vizualizirane na grafa ( Display graph )\n";
-    cout << "5. Izhod ( Exit )\n";
-    cout << "Izberete opciq: ";
+    std::cout << "Menu:\n"
+                 "1. Dobavqne na vryh ( Add node )\n"
+                 "2. Dobavqne na dyga ( Add link )\n"
+                 "3. Iztrivane na vryh ( Delete mode )\n"
+                 "4. Vizualizirane na grafa ( Display graph )\n"
+                 "5. Izhod ( Exit )\n"
+                 "Izberete opciq: ";
 }
 
-void visualize_graph(link *gr[n])
+void visualize_graph(cGraph &g)
 {
-    cout << "Graph Visualization:\n";
-    for (int i = 0; i < n; i++)
+    std::cout << "Graph Visualization:\n";
+
+    for (auto *n : g.myNode)
     {
-        if (gr[i])
+        std::cout << n->myName << " -> ";
+        for (auto *a : n->adjacent)
         {
-            cout << gr[i]->key << " -> ";
-            link *p = gr[i]->next;
-            while (p != NULL)
-            {
-                cout << p->key << " -> ";
-                p = p->next;
-            }
-            cout << "NULL\n";
+            std::cout << a->myName << " -> ";
         }
+        std::cout << "\n";
     }
-    cout << endl;
 }
 
 /// @brief Count links to other nodes
@@ -168,88 +127,64 @@ void visualize_graph(link *gr[n])
 /// @param c node name
 /// @return out degree
 
-int outDegree(link *gr[n], char c)
+int outDegree(
+    cGraph &g,
+    const std::string &c)
+{
+    auto it = search_node(g,c);
+    if( it == g.myNode.end() )
+        return 0;
+    return (*it)->adjacent.size();
+}
+int inDegree(
+    cGraph &g,
+    const std::string &c)
 {
     int count = 0;
-    for (int i = 0; i < n; i++)
+    for (auto *n : g.myNode)
     {
-        auto *p = gr[i];
-        if (!p)
-            continue;
-        if (p->key != c)
-            continue;
-
-        while (p->next)
-        {
+        auto it = search_node(n->adjacent,c);
+        if (it != n->adjacent.end())
             count++;
-            p = p->next;
-        }
-        break;
-    }
-    return count;
-}
-int inDegree(link *gr[n], char c)
-{
-    int count = 0;
-    for (int i = 0; i < n; i++)
-    {
-        auto *p = gr[i];
-        if (!p)
-            continue;
-        while (p->next)
-        {
-            if (p->next->key == c)
-            {
-                count++;
-            }
-
-            if (!p->next)
-                break;
-            p = p->next;
-        }
     }
     return count;
 }
 
-void deleteNodes1in1out(link *gr[n])
+void deleteNodes1in1out(cGraph &g)
 {
-    std::vector<char> marked;
-    for (int i = 0; i < n; i++)
+    std::vector<std::string> marked;
+    for (auto *n : g.myNode)
     {
-        auto *p = gr[i];
-        if (!p)
-            continue;
-        if( outDegree(gr,p->key) == 1 &&
-            inDegree(gr,p->key) == 1 )
-            marked.push_back( p->key);
+        if (outDegree(g, n->myName) == 1 &&
+            inDegree(g, n->myName) == 1)
+            marked.push_back(n->myName);
     }
-    for( char c : marked )
+    for (auto &c : marked)
     {
-        del_node(gr,c);
+        del_node(g, c);
     }
 }
 
 void test()
 {
-    link *graph[n];
-    init(graph);
+    cGraph graph;
 
-    add_node(graph, 'a');
-    add_node(graph, 'b');
-    add_node(graph, 'c');
-    add_arc(graph, 'a', 'b');
-    add_arc(graph, 'a', 'c');
+    add_node(graph, "a");
+    add_node(graph, "b");
+    add_node(graph, "c");
+    add_arc(graph, "a", "b");
+    add_arc(graph, "a", "c");
     std::cout << "test ";
     visualize_graph(graph);
 
-    std::cout << "a outDegree " << outDegree(graph,'a')
-        << " inDegree " << inDegree(graph,'a')  <<"\n";
-    std::cout << "b outDegree " << outDegree(graph,'b')
-        << " inDegree " << inDegree(graph,'b')<<"\n";
-    std::cout << "c outDegree " << outDegree(graph,'c')
-        << " inDegree " << inDegree(graph,'c')<<"\n";
+    std::cout << "a outDegree " << outDegree(graph, "a")
+              << " inDegree " << inDegree(graph, "a") << "\n";
+    std::cout << "b outDegree " << outDegree(graph, "b")
+              << " inDegree " << inDegree(graph, "b") << "\n";
+    std::cout << "c outDegree " << outDegree(graph, "c")
+              << " inDegree " << inDegree(graph, "c") << "\n";
 
-    del_node(graph, 'b');
+    del_node(graph, "b");
 
     std::cout << "test delete b ";
     visualize_graph(graph);
@@ -259,11 +194,10 @@ int main()
 {
     test();
 
-    link *graph[n];
-    init(graph);
+    cGraph graph;
 
     char option;
-    char c, c1, c2;
+    std::string c, c1, c2;
 
     do
     {
